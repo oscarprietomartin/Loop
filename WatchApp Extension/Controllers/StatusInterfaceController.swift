@@ -31,6 +31,8 @@ final class StatusInterfaceController: WKInterfaceController, ContextUpdatable {
     private lazy var preMealButtonGroup = ButtonGroup(button: preMealButton, image: preMealButtonImage, background: preMealButtonBackground, onBackgroundColor: .carbsColor, offBackgroundColor: .darkCarbsColor)
 
     private lazy var workoutButtonGroup = ButtonGroup(button: workoutButton, image: workoutButtonImage, background: workoutButtonBackground, onBackgroundColor: .workoutColor, offBackgroundColor: .darkWorkoutColor)
+    
+     private lazy var remoteTempTargetButtonGroup = ButtonGroup(button: workoutButton, image: workoutButtonImage, background: workoutButtonBackground, onBackgroundColor: .workoutColor, offBackgroundColor: .darkWorkoutColor)
 
     private var lastOverrideContext: GlucoseRangeScheduleOverrideUserInfo.Context?
 
@@ -136,6 +138,8 @@ final class StatusInterfaceController: WKInterfaceController, ContextUpdatable {
         case .workout?:
             preMealButtonGroup.turnOff()
             workoutButtonGroup.state = .on
+        case .remoteTempTarget?:
+            ()
         case nil:
             preMealButtonGroup.turnOff()
             workoutButtonGroup.turnOff()
@@ -148,6 +152,8 @@ final class StatusInterfaceController: WKInterfaceController, ContextUpdatable {
             return preMealButtonGroup
         case .workout:
             return workoutButtonGroup
+        case .remoteTempTarget:
+            return remoteTempTargetButtonGroup
         }
     }
 
