@@ -897,7 +897,8 @@ extension LoopDataManager {
         
         init() {
             discrepancyGain = 1.0 // high-frequency RC gain, equivalent to Loop 1.5 gain = 1
-            persistentDiscrepancyGain = 5.0 // low-frequency RC gain for persistent errors, must be >= discrepancyGain
+         //   persistentDiscrepancyGain = 5.0 // low-frequency RC gain for persistent errors, must be >= discrepancyGain
+            persistentDiscrepancyGain = 2.5 // low-frequency RC gain for persistent errors, must be >= discrepancyGain
             correctionTimeConstant = 90.0 // correction filter time constant in minutes
             let sampleTime: Double = 5.0 // sample time = 5 min
             integralForget = exp( -sampleTime / correctionTimeConstant ) // must be between 0 and 1
@@ -1035,7 +1036,9 @@ extension LoopDataManager {
         let currentSuspendThreshold = suspendThreshold.doubleValue(for: glucoseUnit)
         
         // safety limit for + integral action: ISF * (2 hours) * (basal rate)
-        let integralActionPositiveLimit = currentSensitivity * 2 * currentBasalRate
+        //modify for college to 1 hour
+       // let integralActionPositiveLimit = currentSensitivity * 2 * currentBasalRate
+        let integralActionPositiveLimit = currentSensitivity * 1 * currentBasalRate
         // safety limit for - integral action: suspend threshold - target
         let integralActionNegativeLimit = min(-15,-abs(currentMinTarget - currentSuspendThreshold))
         
