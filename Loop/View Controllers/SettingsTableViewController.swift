@@ -80,6 +80,7 @@ final class SettingsTableViewController: UITableViewController {
     fileprivate enum ConfigurationRow: Int, CaseCountable {
         case glucoseTargetRange = 0
         case suspendThreshold
+        case maximumIOB
         case basalRate
         case deliveryLimits
         case insulinModel
@@ -284,6 +285,15 @@ final class SettingsTableViewController: UITableViewController {
                 } else {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 }
+            case .maximumIOB:
+                configCell.textLabel?.text = NSLocalizedString("Maximum Correction IOB (U)", comment: "The title text in settings")
+                
+                if let maximumIOB = dataManager.loopManager.settings.maximumIOB {
+                    let value = valueNumberFormatter.string(from: maximumIOB, unit: "U")
+                    configCell.detailTextLabel?.text = value
+                } else {
+                    configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
+                }
             case .insulinModel:
                 configCell.textLabel?.text = NSLocalizedString("Insulin Model", comment: "The title text for the insulin model setting row")
 
@@ -295,7 +305,7 @@ final class SettingsTableViewController: UITableViewController {
             case .deliveryLimits:
                 configCell.textLabel?.text = NSLocalizedString("Delivery Limits", comment: "Title text for delivery limits")
 
-                if dataManager.loopManager.settings.maximumBolus == nil || dataManager.loopManager.settings.maximumBasalRatePerHour == nil {
+                if dataManager.loopManager.settings.maximumBolus == nil || dataManager.loopManager.settings.maximumBasalRatePerHour == nil && dataManager.loopManager.settings.maximumIOB == nil{
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 } else {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.EnabledString
@@ -495,6 +505,21 @@ final class SettingsTableViewController: UITableViewController {
                     self.show(vc, sender: sender)
                 } else if let unit = dataManager.loopManager.glucoseStore.preferredUnit {
                     let vc = GlucoseThresholdTableViewController(threshold: nil, glucoseUnit: unit)
+                    vc.delegate = self
+                    vc.indexPath = indexPath
+                    vc.title = sender?.textLabel?.text
+                    self.show(vc, sender: sender)
+                }
+            case .maximumIOB:
+                if let maximumIOB = dataManager.loopManager.settings.maximumIOB {
+                    // let minBGGuard = dataManager.loopManager.settings.suspendThreshold
+                    let vc = MaximumIOBTableViewController(maximumIOB: maximumIOB)
+                    vc.delegate = self
+                    vc.indexPath = indexPath
+                    vc.title = sender?.textLabel?.text
+                    self.show(vc, sender: sender)
+                } else  {
+                    let vc = MaximumIOBTableViewController(maximumIOB: nil)
                     vc.delegate = self
                     vc.indexPath = indexPath
                     vc.title = sender?.textLabel?.text
@@ -814,6 +839,13 @@ extension SettingsTableViewController: LoopKitUI.TextFieldTableViewControllerDel
                     } else {
                         dataManager.loopManager.settings.suspendThreshold = nil
                     }
+            case .maximumIOB:
+                if let controller = controller as? MaximumIOBTableViewController,
+                    let value = controller.value, let maximumIOB = valueNumberFormatter.number(from: value)?.doubleValue {
+                    dataManager.loopManager.settings.maximumIOB = maximumIOB
+                } else {
+                    dataManager.loopManager.settings.maximumIOB = nil
+                }
                 default:
                     assertionFailure()
                 }
