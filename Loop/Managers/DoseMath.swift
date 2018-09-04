@@ -374,7 +374,47 @@ extension Collection where Iterator.Element == GlucoseValue {
         {
             maxBasalRate = scheduledBasalRate
         }
-
+        
+        ////////////////////////
+        //logic for max iob limit
+        ////////////////////////
+        let defaults = UserDefaults(suiteName: Bundle.main.appGroupSuiteName)
+        if let maximumIOB = defaults?.loopSettings?.maximumIOB {
+            let healthStore = HKHealthStore()
+            let cacheStore = PersistenceController.controllerInAppGroupDirectory()
+            let doseStore = DoseStore(
+                healthStore: healthStore,
+                cacheStore: cacheStore,
+                observationEnabled: false,
+                insulinModel: defaults?.insulinModelSettings?.model,
+                basalProfile: defaults?.basalRateSchedule,
+                insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
+            )
+            let maxiobGroup = DispatchGroup()
+            maxiobGroup.enter()
+            doseStore.insulinOnBoard(at: Date()) { (result) in
+                let activeInsulin: Double?
+                switch result {
+                case .success(let value):
+                    activeInsulin = value.value
+                case .failure:
+                    activeInsulin = nil
+                }
+                if activeInsulin != nil {
+                    if case .aboveRange(min: _, correcting: _, minTarget: _, units: _)? = correction,
+                        activeInsulin as! Double  > maximumIOB as! Double
+                    {
+                        maxBasalRate = scheduledBasalRate
+                    }
+                }
+                maxiobGroup.leave()
+            }
+            maxiobGroup.wait()
+        }
+        ///////////////////////////
+        //finish maximum iob logic
+        ///////////////////////////
+        
         let temp = correction?.asTempBasal(
             scheduledBasalRate: scheduledBasalRate,
             maxBasalRate: maxBasalRate,
